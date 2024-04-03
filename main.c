@@ -8,13 +8,13 @@
 
 void validate_elf_file(FILE *file, char *buffer)
 {
-	PELF32_HEADER Header32 = (PELF32_HEADER)buffer;
-	PELF64_HEADER Header64 = (PELF64_HEADER)buffer;
+	Elf32_Ehdr *ehdr32 = (Elf32_Ehdr *)buffer;
+	Elf64_Ehdr *ehdr64 = (Elf64_Ehdr *)buffer;
 
-	if(Header32->e_ident[EI_MAG0] != 0x7F ||
-       Header32->e_ident[EI_MAG1] != 0x45 ||
-       Header32->e_ident[EI_MAG2] != 0x4C ||
-       Header32->e_ident[EI_MAG3] != 0x46)
+	if(ehdr32->e_ident[EI_MAG0] != 0x7F ||
+       ehdr32->e_ident[EI_MAG1] != 0x45 ||
+       ehdr32->e_ident[EI_MAG2] != 0x4C ||
+       ehdr32->e_ident[EI_MAG3] != 0x46)
     {
         /* ELF file header is invalid */
 		printf("[!] File is not a valid ELF file!\n");
@@ -22,18 +22,18 @@ void validate_elf_file(FILE *file, char *buffer)
     }
 
     /* Check architecture */
-    if(Header32->e_ident[EI_CLASS] == 1)
+    if(ehdr32->e_ident[EI_CLASS] == 1)
     {
         /* 32-bit executable */
 		printf("[ ] 32-bit executable\n");
-		printf("[ ] Entry point: 0x%x\n", Header32->e_entry);
-		printf("[ ] Program header offset: 0x%x\n", Header32->e_phoff);
-		printf("[ ] Section header offset: 0x%x\n", Header32->e_shoff);
-		printf("[ ] Program header count: 0x%hx\n", Header32->e_phnum);
-		printf("[ ] Section header count: 0x%hx\n", Header32->e_shnum);
-		PELF32_PROGRAM_HEADER program_headers = (PELF32_PROGRAM_HEADER)(buffer + Header32->e_phoff);
+		printf("[ ] Entry point: 0x%x\n", ehdr32->e_entry);
+		printf("[ ] Program header offset: 0x%x\n", ehdr32->e_phoff);
+		printf("[ ] Section header offset: 0x%x\n", ehdr32->e_shoff);
+		printf("[ ] Program header count: 0x%hx\n", ehdr32->e_phnum);
+		printf("[ ] Section header count: 0x%hx\n", ehdr32->e_shnum);
+		Elf32_Phdr *program_headers = (Elf32_Phdr *)(buffer + ehdr32->e_phoff);
 
-		for (int i = 0; i < Header32->e_phnum; i++) {
+		for (int i = 0; i < ehdr32->e_phnum; i++) {
 			printf("Program header %d:", i);
 			printf("\t[ ] Type: 0x%x\n", program_headers[i].p_type);
 			printf("\t[ ] Offset: 0x%x\n", program_headers[i].p_offset);
@@ -45,18 +45,18 @@ void validate_elf_file(FILE *file, char *buffer)
 			printf("\t[ ] Align: 0x%x\n", program_headers[i].p_align);
 		}
     }
-    else if(Header32->e_ident[EI_CLASS] == 2)
+    else if(ehdr32->e_ident[EI_CLASS] == 2)
     {
         /* 64-bit executable */
 		printf("[ ] 64-bit executable\n");
-		printf("[ ] Entry point: 0x%llx\n", Header64->e_entry);
-		printf("[ ] Program header offset: 0x%llx\n", Header64->e_phoff);
-		printf("[ ] Section header offset: 0x%llx\n", Header64->e_shoff);
-		printf("[ ] Program header count: 0x%hx\n", Header64->e_phnum);
-		printf("[ ] Section header count: 0x%hx\n", Header64->e_shnum);
+		printf("[ ] Entry point: 0x%llx\n", ehdr64->e_entry);
+		printf("[ ] Program header offset: 0x%llx\n", ehdr64->e_phoff);
+		printf("[ ] Section header offset: 0x%llx\n", ehdr64->e_shoff);
+		printf("[ ] Program header count: 0x%hx\n", ehdr64->e_phnum);
+		printf("[ ] Section header count: 0x%hx\n", ehdr64->e_shnum);
 
-		PELF64_PROGRAM_HEADER program_headers = (PELF64_PROGRAM_HEADER)(buffer + Header64->e_phoff);
-		for (int i = 0; i < Header64->e_phnum; i++) {
+		Elf64_Phdr *program_headers = (Elf64_Phdr *)(buffer + ehdr64->e_phoff);
+		for (int i = 0; i < ehdr64->e_phnum; i++) {
 			printf("Program header %d:\n", i);
 			printf("\t[ ] Type: 0x%x\n", program_headers[i].p_type);
 			printf("\t[ ] Offset: 0x%llx\n", program_headers[i].p_offset);
@@ -76,7 +76,7 @@ void validate_elf_file(FILE *file, char *buffer)
     }
 
     /* Check endianness */
-    if(Header32->e_ident[EI_DATA] != 1)
+    if(ehdr32->e_ident[EI_DATA] != 1)
     {
         /* Big-endian */
 		printf("[ ] Endianness: Big endian\n");
@@ -89,7 +89,7 @@ void validate_elf_file(FILE *file, char *buffer)
 
 	/* Subsystem */
 	printf("[ ] Subsystem: ");
-	switch(Header32->e_ident[EI_OSABI])
+	switch(ehdr32->e_ident[EI_OSABI])
 	{
 		case 0x00:
 			printf("System V");
@@ -153,7 +153,7 @@ void validate_elf_file(FILE *file, char *buffer)
 
 	/* Filetype */
 	printf("[ ] File type: ");
-	switch(Header32->e_type)
+	switch(ehdr32->e_type)
 	{
 		case 0x00:
 			printf("None");
@@ -175,7 +175,7 @@ void validate_elf_file(FILE *file, char *buffer)
 
 	/* Machine type */
 	printf("[ ] Target: ");
-	switch(Header32->e_machine)
+	switch(ehdr32->e_machine)
 	{
 		case 0x00:
 			printf("No specific ISA");
